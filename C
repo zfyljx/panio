@@ -1,0 +1,232 @@
+
+#include "sdl2game.h"
+#define maxnotesnum 200
+Image* board;
+Image* keywhite;
+Image* keyblack;
+Image* keyplay;
+Image* keyrecord;
+Image* keyplaying;
+Image* keyrecording;
+Image* keywhitedown;
+Image* keyblackdown;
+float keynum;
+float notes[ maxnotesnum];
+Uint32 notestime[ maxnotesnum];
+int recordnum;
+Bool recording=FALSE;
+Bool playing=FALSE;
+Sound* s1;
+Sound* s2;
+Sound* s3;
+Sound* s4;
+Sound* s5;
+Sound* s6;
+Sound* s7;
+Sound* s1u;
+Sound* s2u;
+Sound* s4u;
+Sound* s5u;
+Sound* s6u;
+Thread* mythread=NULL;
+int playingfunc(void*  data){
+   int i;
+   for(i=0;i<recordnum;i++){
+        if(!playing){break;}
+    if(notes[i]==1)playtimedsound(s1,1000);
+    else if(notes[i]==2)playtimedsound(s2,1000);
+    else if(notes[i]==3)playtimedsound(s3,1000);
+    else if(notes[i]==4)playtimedsound(s4,1000);
+    else if(notes[i]==5)playtimedsound(s5,1000);
+    else if(notes[i]==6)playtimedsound(s6,1000);
+    else if(notes[i]==7)playtimedsound(s7,1000);
+    else if(notes[i]==1.5)playtimedsound(s1u,1000);
+    else if(notes[i]==2.5)playtimedsound(s2u,1000);
+    else if(notes[i]==4.5)playtimedsound(s4u,1000);
+    else if(notes[i]==5.5)playtimedsound(s5u,1000);
+    else if(notes[i]==6.5)playtimedsound(s6u,1000);
+    if(i<recordnum-1){
+    Uint32 time=notestime[i+1]-notestime[i];
+    delay(time);}
+
+   }
+   playing=FALSE;
+   mythread=NULL;
+    return 0;}
+// 初始化
+void setup() {
+    size(640,480);
+    title("钢琴键");
+    bgimage("image/bg.png");
+    board=loadimage("image/board.png");
+    keywhite=loadimage("image/keywhite.png");
+    keyblack=loadimage("image/keyblack.png");
+    keyplay=loadimage("image/keyplay.png");
+    keyrecord=loadimage("image/keyrecord.png");
+    keyplaying=loadimage("image/keyplaying.png");
+    keyrecording=loadimage("image/keyrecording.png");
+    keywhitedown=loadimage("image/keywhitedown.png");
+    keyblackdown=loadimage("image/keyblackdown.png");
+    s1=loadsound("sound/1.wav");
+    s2=loadsound("sound/2.wav");
+    s3=loadsound("sound/3.wav");
+    s4=loadsound("sound/4.wav");
+    s5=loadsound("sound/5.wav");
+    s6=loadsound("sound/6.wav");
+    s7=loadsound("sound/7.wav");
+    s1u=loadsound("sound/1#.wav");
+    s2u=loadsound("sound/2#.wav");
+    s6u=loadsound("sound/6#.wav");
+    s4u=loadsound("sound/4#.wav");
+    s5u=loadsound("sound/5#.wav");
+    keynum=0;
+}
+
+// 界面绘图
+void draw(float stateTime) {
+image(board,0,0);
+   /* for(i=0;i<7;i++){
+    coloredfillrect(0+50*i,0,50,200,255,255,255,0,0,0);}
+    for(i=0;i<6;i++){
+    if(i==2)continue;
+     coloredfillrect(35+50*i,0,30,120,0,0,0,0,0,0);
+    }*/
+//白键
+if(keynum==1)image(keywhitedown,30+83*0,105);else image(keywhite,30+83*0,105);
+if(keynum==2)image(keywhitedown,30+83*1,105);else image(keywhite,30+83*1,105);
+if(keynum==3)image(keywhitedown,30+83*2,105);else image(keywhite,30+83*2,105);
+if(keynum==4)image(keywhitedown,30+83*3,105);else image(keywhite,30+83*3,105);
+if(keynum==5)image(keywhitedown,30+83*4,105);else image(keywhite,30+83*4,105);
+if(keynum==6)image(keywhitedown,30+83*5,105);else image(keywhite,30+83*5,105);
+if(keynum==7)image(keywhitedown,30+83*6,105);else image(keywhite,30+83*6,105);
+//黑键
+if(keynum==1.5f)image(keyblackdown,90+83*0,105);else image(keyblack,90+83*0,105);
+if(keynum==2.5f)image(keyblackdown,90+83*1,105);else image(keyblack,90+83*1,105);
+if(keynum==4.5f)image(keyblackdown,90+83*3,105);else image(keyblack,90+83*3,105);
+if(keynum==5.5f)image(keyblackdown,90+83*4,105);else image(keyblack,90+83*4,105);
+if(keynum==6.5f)image(keyblackdown,90+83*5,105);else image(keyblack,90+83*5,105);
+
+
+
+
+   if(playing) image(keyplaying,200,20);else image(keyplay,200,20);
+    if(recording) image(keyrecording,340,20);else image(keyrecord,340,20);
+}
+
+
+// 鼠标事件处理
+void mousePress() {
+    if(inbound(mouseX,mouseY,90+83*0,105,51,200)){keynum=1.5;playtimedsound(s1u,1000);}
+else if(inbound(mouseX,mouseY,90+83*1,105,51,200)){  keynum=2.5;playtimedsound(s2u,1000);}
+else if(inbound(mouseX,mouseY,90+83*3,105,51,200)) {  keynum=4.5;playtimedsound(s4u,1000);}
+else if(inbound(mouseX,mouseY,90+83*4,105,51,200)) {  keynum=5.5;playtimedsound(s5u,1000);}
+else if(inbound(mouseX,mouseY,90+83*5,105,51,200)) {  keynum=6.5;playtimedsound(s6u,1000);}
+else if(inbound(mouseX,mouseY,30+83*0,105,83,345)) {  keynum=1; playtimedsound(s1,1000);}
+else if(inbound(mouseX,mouseY,30+83*1,105,83,345)) { keynum=2; playtimedsound(s2,1000);}
+else if(inbound(mouseX,mouseY,30+83*2,105,83,345)) { keynum=3; playtimedsound(s3,1000);}
+else if(inbound(mouseX,mouseY,30+83*3,105,83,345)){ keynum=4; playtimedsound(s4,1000);}
+else if(inbound(mouseX,mouseY,30+83*4,105,83,345) ){ keynum=5; playtimedsound(s5,1000);}
+else if(inbound(mouseX,mouseY,30+83*5,105,83,345)){ keynum=6; playtimedsound(s6,1000);}
+else if(inbound(mouseX,mouseY,30+83*6,105,83,345)){ keynum=7; playtimedsound(s7,1000);}
+    //黑键
+//{if(mouseX>35&&mouseX<35+30&&mouseY>0&&mouseY<120) playsound(s1u);
+//else if(mouseX>85&&mouseX<115&&mouseY>0&&mouseY<120) playsound(s2u);
+//if(mouseX>185&&mouseX<215&&mouseY>0&&mouseY<120) playsound(s4u);
+//if(mouseX>235&&mouseX<265&&mouseY>0&&mouseY<120) playsound(s5u);
+//if(mouseX>285&&mouseX<315&&mouseY>0&&mouseY<120) playsound(s6u);
+
+
+    //白键
+//if(mouseX>0&&mouseX<50) playsound(s1);
+//if(mouseX>50&&mouseX<100) playsound(s2);
+//if(mouseX>100&&mouseX<150) playsound(s3);
+//if(mouseX>150&&mouseX<200) playsound(s4);
+//if(mouseX>200&&mouseX<250 ) playsound(s5);
+//if(mouseX>250&&mouseX<300) playsound(s6);
+//if(mouseX>300&&mouseX<350) playsound(s7);}}
+if(keynum!=0&&recording&&recordnum<maxnotesnum){
+    notes[recordnum]=keynum;
+    notestime[recordnum]=timetick();
+    recordnum++;
+}
+
+if(inbound(mouseX,mouseY,200,20,97,51)){
+  playing=!playing;
+  if(playing&&recordnum>0){
+    recording=FALSE ;
+if(mythread==NULL){
+    mythread=thread(playingfunc,(void*)NULL);
+  }
+
+  /*int i;
+  for(i=0;i<recordnum;i++){
+    printf("%.1f    ",notes[i]);
+  }
+  printf("\n");
+  for(i=0;i<recordnum;i++){
+    printf("%.1f    ",notestime[i]);
+  }
+  printf("\n");*/
+}
+else{
+        playing=FALSE;}
+ }
+if (inbound(mouseX,mouseY,340,20,97,51)){
+recording=!recording;
+if(recording)playing=FALSE;
+int i;
+for(i=0;i< maxnotesnum;i++){
+    notes[i]=0;
+    notestime[i]=0;
+}
+}
+}
+void mouseMove() {
+}
+void mouseRelease() {
+    keynum=0;
+}
+
+// 键盘事件处理函数
+void keyDown() {
+    if(key==KEY_1){keynum=1; playtimedsound(s1,1000);}
+    if(key==KEY_2){keynum=2;playtimedsound(s2,1000);
+}   if(key==KEY_3){keynum=3;playtimedsound(s3,1000);}
+    if(key==KEY_4){keynum=4;playtimedsound(s4,1000);}
+    if(key==KEY_5){keynum=5;playtimedsound(s5,1000);}
+    if(key==KEY_6){keynum=6;playtimedsound(s6,1000);}
+    if(key==KEY_7){keynum=7;playtimedsound(s7,1000);}
+}
+void keyUp() {
+    keynum=0;
+}
+
+// 程序结束时回收游戏资源
+void close() {
+    playing=FALSE;
+    if(mythread!=NULL){
+        waitfor(mythread);
+    }
+    unloadsound(s1);
+    unloadsound(s2);
+    unloadsound(s3);
+    unloadsound(s4);
+    unloadsound(s5);
+    unloadsound(s6);
+    unloadsound(s7);
+    unloadsound(s1u);
+    unloadsound(s2u);
+    unloadsound(s6u);
+    unloadsound(s4u);
+    unloadsound(s5u);
+    unloadimage(board);
+    unloadimage(keywhite);
+    unloadimage(keyblack);
+    unloadimage(keyplay);
+    unloadimage(keyrecord);
+    unloadimage(keywhitedown);
+    unloadimage(keyblackdown);
+    unloadimage(keyplaying);
+    unloadimage(keyrecording);
+}
+
